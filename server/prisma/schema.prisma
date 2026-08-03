@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ComponentTier {
+  FRONTEND
+  GATEWAY
+  BACKEND
+  DATABASE
+  CACHE
+  QUEUE
+  STORAGE
+  THIRD_PARTY
+  SECURITY
+}
+
+enum ProjectVisibility {
+  PRIVATE
+  PUBLIC
+  SHARED
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  username      String         @unique
+  passwordHash  String
+  avatarUrl     String?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  refreshTokens RefreshToken[]
+  projects      Project[]
+  
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isRevoked Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model Project {
+  id          String            @id @default(uuid())
+  title       String
+  description String?
+  visibility  ProjectVisibility @default(PRIVATE)
+  tags        String[]          @default([])
+  thumbnail   String?           
+  
+  ownerId     String
+  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  diagram     Diagram?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("projects")
+}
+
+model Diagram {
+  id          String   @id @default(uuid())
+  projectId   String   @unique
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  nodes       Json     
+  edges       Json     
+  viewport    Json     
+  settings    Json     
+  
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("diagrams")
+}
+
+model Template {
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  category    ComponentTier
+  thumbnail   String?
+  nodes       Json
+  edges       Json
+  isOfficial  Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+
+  @@map("templates")
+}
