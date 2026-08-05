@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, ArrowRight, Lock, Mail, User as UserIcon, AlertCircle } from 'lucide-react';
+import { Layers, ArrowRight, Lock, Mail, User as UserIcon, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { api } from '../services/api';
 
@@ -33,10 +33,37 @@ export const RegisterPage: React.FC<Props> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f17] flex items-center justify-center p-6 text-slate-100">
-      <div className="w-full max-w-md glass-panel p-8 rounded-2xl border border-slate-800 shadow-2xl flex flex-col gap-6">
+    <div className="min-h-screen bg-[#0b0f17] flex flex-col justify-between p-6 text-slate-100 selection:bg-blue-500 selection:text-white">
+      {/* Top Header Navigation */}
+      <header className="max-w-md w-full mx-auto flex items-center justify-between py-4">
+        <button
+          onClick={() => onNavigate('landing')}
+          className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-xl"
+        >
+          <ArrowLeft className="w-4 h-4 text-blue-400" />
+          Back to Home
+        </button>
+
+        <div
+          onClick={() => onNavigate('landing')}
+          className="flex items-center gap-2 cursor-pointer group"
+        >
+          <div className="p-1.5 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white">
+            <Layers className="w-4 h-4" />
+          </div>
+          <span className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
+            DevCanvas
+          </span>
+        </div>
+      </header>
+
+      {/* Register Card */}
+      <div className="w-full max-w-md mx-auto glass-panel p-8 rounded-2xl border border-slate-800 shadow-2xl flex flex-col gap-6 my-auto">
         <div className="flex flex-col items-center text-center gap-2">
-          <div className="p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30">
+          <div
+            onClick={() => onNavigate('landing')}
+            className="p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 cursor-pointer hover:scale-105 transition-transform"
+          >
             <Layers className="w-6 h-6" />
           </div>
           <h1 className="text-xl font-bold text-slate-100">Create DevCanvas Account</h1>
@@ -114,6 +141,11 @@ export const RegisterPage: React.FC<Props> = ({ onNavigate }) => {
           </button>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="text-center text-[11px] text-slate-500 py-4">
+        © 2026 DevCanvas Architecture Designer
+      </footer>
     </div>
   );
 };

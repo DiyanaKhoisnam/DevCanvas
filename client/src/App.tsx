@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from './stores/useAuthStore';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -9,20 +9,45 @@ import { CanvasWorkspacePage } from './pages/CanvasWorkspacePage';
 
 export function App() {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
-  const [currentPage, setCurrentPage] = useState<string>('landing');
+  const [currentPage, setCurrentPage] = useState<string>(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash || 'landing';
+  });
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+
+  const navigateTo = useCallback((page: string, pushHistory = true) => {
+    setCurrentPage(page);
+    if (pushHistory) {
+      window.history.pushState({ page }, '', `#${page}`);
+    }
+  }, []);
 
   useEffect(() => {
     checkAuth();
   }, []);
 
+  // Listen for Browser Back / Forward buttons (popstate)
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.page) {
+        setCurrentPage(event.state.page);
+      } else {
+        const hash = window.location.hash.replace('#', '');
+        setCurrentPage(hash || 'landing');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated && (currentPage === 'landing' || currentPage === 'login' || currentPage === 'register')) {
-        setCurrentPage('dashboard');
+        navigateTo('dashboard', false);
       }
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, currentPage, navigateTo]);
 
   if (isLoading) {
     return (
@@ -35,14 +60,14 @@ export function App() {
 
   const handleOpenCanvas = (projectId: string) => {
     setActiveProjectId(projectId);
-    setCurrentPage('canvas');
+    navigateTo('canvas');
   };
 
   if (currentPage === 'canvas' && activeProjectId) {
     return (
       <CanvasWorkspacePage
         projectId={activeProjectId}
-        onBack={() => setCurrentPage('dashboard')}
+        onBack={() => navigateTo('dashboard')}
       />
     );
   }
@@ -51,7 +76,7 @@ export function App() {
     return (
       <TemplatesPage
         onOpenCanvas={handleOpenCanvas}
-        onNavigate={page => setCurrentPage(page)}
+        onNavigate={page => navigateTo(page)}
       />
     );
   }
@@ -60,20 +85,20 @@ export function App() {
     return (
       <DashboardPage
         onOpenCanvas={handleOpenCanvas}
-        onNavigate={page => setCurrentPage(page)}
+        onNavigate={page => navigateTo(page)}
       />
     );
   }
 
   if (currentPage === 'login') {
-    return <LoginPage onNavigate={page => setCurrentPage(page)} />;
+    return <LoginPage onNavigate={page => navigateTo(page)} />;
   }
 
   if (currentPage === 'register') {
-    return <RegisterPage onNavigate={page => setCurrentPage(page)} />;
+    return <RegisterPage onNavigate={page => navigateTo(page)} />;
   }
 
-  return <LandingPage onNavigate={page => setCurrentPage(page)} />;
+  return <LandingPage onNavigate={page => navigateTo(page)} />;
 }
 
 export default App;
